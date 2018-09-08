@@ -1,115 +1,109 @@
 #include <stdio.h>
 #include <malloc.h>
 
-struct TreeNode;
-typedef struct TreeNode *Position;
-typedef struct TreeNode *SearchTree;
+struct QueueRecord;
+typedef struct QueueRecord *Queue;
+int IsEmpty(Queue Q);
+int IsFull(Queue Q);
+Queue CreateQueue(Queue Q);
+void DisposeQueue(Queue Q);
+void MakeQueue(Queue Q);
+void Enqueue(int x, Queue Q);
+int Front(Queue Q);
+void Dequeue(Queue Q);
+int FrontAndDequeue(Queue Q);
 
-struct TreeNode {
-	int x;
-	SearchTree Left;
-	SearchTree Right;
+struct QueueRecord {
+	int Capacity;
+	int Front;
+	int Rear;
+	int Size;
+	int *Array;
 };
 
 
-SearchTree MakeEmpty(SearchTree T) {
-	if (T != NULL) {
-		MakeEmpty(T->Left);
-		MakeEmpty(T->Right);
-		free(T);
-	}
-	return NULL;
+int IsEmpty(Queue Q) {
+	return Q->Size == 0;
 }
 
-Position Find(int x, SearchTree T) {
-	if (T == NULL)
-		return NULL;
-	if (x < T->x)
-		return Find(x, T->Left);
-	else if (x > T->x)
-		return Find(x, T->Right);
-	else
-		return T;
+int IsFull(Queue Q) {
+	return Q->Size == Q->Capacity;
 }
 
-Position FindMin(SearchTree T) {
-	if (T == NULL)
-		return NULL;
-	else if (T->Left == NULL)
-		return T;
-	else
-		return FindMin(T->Left);
+void MakeEmpty(Queue Q) {
+	Q->Size = 0;
+	Q->Front = 1;
+	Q->Rear = 0;
 }
 
-Position FindMax(SearchTree T) {
-	if (T != NULL)
-		while (T->Right != NULL)
-			T = T->Right;
-	return T;
+static int Succ(int Value, Queue Q) {
+	if (++Value == Q->Capacity)
+		Value = 0;
+	return Value;
 }
 
-SearchTree Insert(int x, SearchTree T) {
-	if (T == NULL) {
-		T = (SearchTree)malloc(sizeof(struct TreeNode));
-		T->x = x;
-		T->Right = T->Left = NULL;
-	}
-	else if (x < T->x)
-		T->Left = Insert(x, T->Left);
-	else if (x > T->x)
-		T->Right = Insert(x, T->Right);
-	return T;
-}
-
-SearchTree Delete(int x, SearchTree T) {
-	Position TmpCell;
-	if (T == NULL)
-		printf("Element not found");
-	else if (x < T->x)
-		T->Left = Delete(x, T->Left);
-	else if (x > T->x)
-		T->Right = Delete(x, T->Right);
-	else if (T->Left && T->Right) {
-		TmpCell = FindMin(T->Right);
-		T->x = TmpCell->x;
-		T->Right = Delete(T->x, T->Right);
-	}
+void Enqueue(int x, Queue Q) {
+	if (IsFull(Q))
+		printf("Error : Full queue\n");
 	else {
-		TmpCell = T;
-		if (T->Left == NULL)
-			T = T->Right;
-		else if (T->Right == NULL)
-			T = T->Left;
-		free(TmpCell);
+		Q->Size++;
+		Q->Rear = Succ(Q->Rear, Q);
+		Q->Array[Q->Rear] = x;
 	}
-	return T;
+}
+
+Queue MakeQueue(int Capacity) {
+	Queue Q;
+	Q = (Queue)malloc(sizeof(struct QueueRecord));
+	Q->Capacity = Capacity;
+	Q->Array = (int*)malloc(sizeof(int)*Capacity);
+	return Q;
+}
+
+void PrintQueue(Queue Q) {
+	int i, j = Q->Front;
+	for (i = 1; i <= Q->Size; i++,j++) {
+		printf("%d-%d ", j, Q->Array[j]);
+		if (j+1 == Q->Capacity)
+			j = -1;
+	}
+	printf("\n");
+}
+
+void DisposeQueue(Queue Q)
+{
+	if (Q != NULL) {
+		free(Q->Array);
+		free(Q);
+	}
 }
 
 int main(void)
 {
-	SearchTree T1 = NULL;
-	int x;
-	printf("Input the numbers(end with -1):");
-	scanf("%d", &x);
-	while (x != -1) {
-		T1 = Insert(x, T1);
+	Queue Q;
+	int Capacity, x, i;
+	printf("Create a Queue(Input the capacity) : ");
+	scanf("%d", &Capacity);
+	Q = MakeQueue(Capacity);
+	MakeEmpty(Q);
+	printf("Enqueue(end with -1) : ");
+	for (i = 1; i <= Capacity; i++) {
 		scanf("%d", &x);
+		if (x == -1)
+			break;
+		Enqueue(x, Q);
 	}
-	printf("Find the number:");
+	printf("The Queue is : ");
+	PrintQueue(Q);
+	printf("Enqueue : ");
 	scanf("%d", &x);
-	SearchTree Temp;
-	Temp = Find(x, T1);
-	printf("-%d-\n", Temp->x);
-	Temp = FindMax(T1);
-	printf("max = %d\n", Temp->x);
-	Temp = FindMin(T1);
-	printf("Min = %d\n", Temp->x);
-	printf("Delete the number:");
-	scanf("%d", &x);
-	T1 = Delete(x, T1);
-	printf("=%d=", T1->x);
-	T1 = MakeEmpty(T1);
-	if (T1 == NULL)
-		printf("Empty\n");
+	Enqueue(x, Q);
+	printf("The new queue is : ");
+	PrintQueue(Q);
+	printf("DisposeQueue...\n");
+	DisposeQueue(Q);
+	printf("Down");
 	return 0;
 }
+
+
