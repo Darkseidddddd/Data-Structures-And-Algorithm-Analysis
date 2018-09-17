@@ -8,7 +8,6 @@ typedef PtrToNode Position;
 
 List MakeEmpty(List L);
 int IsEmpty(List L);
-int IsLast(Position P);
 Position Find(int x, List L);
 void Delete(int x, List L);
 Position FindPrevious(int x, List L);
